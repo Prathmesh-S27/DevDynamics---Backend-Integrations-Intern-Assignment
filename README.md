@@ -310,4 +310,5 @@ Contributions to the Smart Event Planner are welcome! To contribute, please foll
 5. Create a pull request against the main repository
 
 Please ensure that your code adheres to the existing style and conventions used in the project.#   D e v D y n a m i c s - - - B a c k e n d - I n t e g r a t i o n s - I n t e r n - A s s i g n m e n t  
+ #   D e v D y n a m i c s - - - B a c k e n d - I n t e g r a t i o n s - I n t e r n - A s s i g n m e n t  
  
