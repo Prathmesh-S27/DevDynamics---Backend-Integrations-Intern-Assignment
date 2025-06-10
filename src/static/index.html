@@ -299,6 +299,18 @@
 
             try {
                 const response = await fetch(`${API_BASE}/events/`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Server returned non-JSON response');
+                }
+                
                 const events = await response.json();
 
                 if (events.length === 0) {
@@ -313,20 +325,24 @@
                     try {
                         const weatherResponse = await fetch(`${API_BASE}/events/${event.id}/suitability`);
                         if (weatherResponse.ok) {
-                            const weather = await weatherResponse.json();
-                            const suitabilityClass = weather.suitability ? 
-                                `weather-${weather.suitability.toLowerCase()}` : 'weather-unknown';
-                            const scoreClass = weather.score >= 80 ? 'score-good' : 
-                                weather.score >= 60 ? 'score-okay' : 'score-poor';
-                            
-                            weatherInfo = `
-                                <div class="weather-info">
-                                    <span>Weather: ${weather.suitability || 'Unknown'}</span>
-                                    <span class="weather-score ${scoreClass}">Score: ${weather.score || 0}</span>
-                                </div>
-                            `;
+                            const weatherContentType = weatherResponse.headers.get('content-type');
+                            if (weatherContentType && weatherContentType.includes('application/json')) {
+                                const weather = await weatherResponse.json();
+                                const suitabilityClass = weather.suitability ? 
+                                    `weather-${weather.suitability.toLowerCase()}` : 'weather-unknown';
+                                const scoreClass = weather.score >= 80 ? 'score-good' : 
+                                    weather.score >= 60 ? 'score-okay' : 'score-poor';
+                                
+                                weatherInfo = `
+                                    <div class="weather-info">
+                                        <span>Weather: ${weather.suitability || 'Unknown'}</span>
+                                        <span class="weather-score ${scoreClass}">Score: ${weather.score || 0}</span>
+                                    </div>
+                                `;
+                            }
                         }
                     } catch (e) {
+                        console.warn('Weather data fetch failed for event', event.id, e);
                         weatherInfo = '<div class="weather-info">Weather data unavailable</div>';
                     }
 
@@ -350,7 +366,8 @@
 
                 eventsList.innerHTML = eventsHTML;
             } catch (error) {
-                eventsList.innerHTML = '<p>Error loading events: ' + error.message + '</p>';
+                console.error('Load events error:', error);
+                eventsList.innerHTML = `<p>Error loading events: ${error.message}</p>`;
             }
         }
 

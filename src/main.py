@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from src.api.v1.api import api_router
 from src.core.config import settings
 from src.core.database import create_tables
+from fastapi.responses import JSONResponse
 import os
 
 app = FastAPI(
@@ -55,6 +56,21 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "service": "Smart Event Planner API"}
+
+@app.exception_handler(500)
+async def internal_server_error_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error occurred"}
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    print(f"Unhandled exception: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred"}
+    )
 
 # For local development and deployment
 if __name__ == "__main__":

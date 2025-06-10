@@ -15,16 +15,27 @@ async def create_event(event: EventCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[Event])
 async def get_events(db: Session = Depends(get_db)):
-    event_service = EventService(db)
-    return event_service.get_all_events()
+    try:
+        event_service = EventService(db)
+        events = event_service.get_all_events()
+        return events
+    except Exception as e:
+        print(f"Error in get_events: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
 
 @router.get("/{event_id}", response_model=Event)
 async def get_event(event_id: int, db: Session = Depends(get_db)):
-    event_service = EventService(db)
-    event = event_service.get_event(event_id)
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return event
+    try:
+        event_service = EventService(db)
+        event = event_service.get_event(event_id)
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        return event
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in get_event: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching event: {str(e)}")
 
 @router.put("/{event_id}", response_model=Event)
 async def update_event(event_id: int, event: EventUpdate, db: Session = Depends(get_db)):
@@ -60,17 +71,25 @@ async def get_event_alternatives(event_id: int, db: Session = Depends(get_db)):
 @router.get("/{event_id}/suitability", response_model=dict)
 async def get_event_suitability(event_id: int, db: Session = Depends(get_db)):
     """Get weather suitability score for event"""
-    event_service = EventService(db)
-    event = event_service.get_event(event_id)
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    if event.weather_data and "analysis" in event.weather_data:
-        return event.weather_data["analysis"]
-    
-    # If no cached weather data, fetch fresh analysis
-    analysis = await event_service.analyze_event_weather(event_id)
-    return analysis
+    try:
+        event_service = EventService(db)
+        event = event_service.get_event(event_id)
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        if event.weather_data and "analysis" in event.weather_data:
+            return event.weather_data["analysis"]
+        
+        # If no cached weather data, fetch fresh analysis
+        analysis = await event_service.analyze_event_weather(event_id)
+        if "error" in analysis:
+            raise HTTPException(status_code=500, detail=analysis["error"])
+        return analysis
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in get_event_suitability: {e}")
+        return {"suitability": "Unknown", "score": 0, "reasons": ["Weather data unavailable"]}
 
 @router.get("/{event_id}/weather-analysis", response_model=dict)
 async def get_enhanced_weather_analysis(event_id: int, db: Session = Depends(get_db)):
