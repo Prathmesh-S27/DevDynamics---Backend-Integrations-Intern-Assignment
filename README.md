@@ -51,7 +51,7 @@ The Smart Event Planner is a weather-intelligent event management system that he
 - ✅ **Historical Weather Analysis**: Compare with past weather data
 - ✅ **Hourly Weather Breakdown**: Detailed hour-by-hour forecasts
 - ✅ **Weather Trends**: Analyze improving/worsening conditions
-- ✅ **Nearby Location Comparison**: Weather analysis for nearby cities
+- ✅ **Nearby Location Comparison**: Weather analysis for nearby cities (50-150km radius)
 - ✅ **Smart Notifications**: Weather change alerts and event reminders
 - ✅ **Modern Frontend Interface**: Interactive web dashboard
 
@@ -309,9 +309,4 @@ Contributions to the Smart Event Planner are welcome! To contribute, please foll
 4. Push your branch to your forked repository
 5. Create a pull request against the main repository
 
-Please ensure that your code adheres to the existing style and conventions used in the project.#   D e v D y n a m i c s - - - B a c k e n d - I n t e g r a t i o n s - I n t e r n - A s s i g n m e n t 
- 
- #   D e v D y n a m i c s - - - B a c k e n d - I n t e g r a t i o n s - I n t e r n - A s s i g n m e n t 
- 
- #   D e v D y n a m i c s - - - B a c k e n d - I n t e g r a t i o n s - I n t e r n - A s s i g n m e n t  
- 
+Please ensure that your code adheres to the existing style and conventions used in the project.
