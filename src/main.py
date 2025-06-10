@@ -35,10 +35,15 @@ except RuntimeError:
 async def startup_event():
     """Create database tables on startup."""
     try:
-        create_tables()
-        print("Database tables created successfully")
+        # Only create tables if DATABASE_URL is properly configured
+        if "db:" not in settings.DATABASE_URL:  # Skip if using docker 'db' host
+            create_tables()
+            print("Database tables created successfully")
+        else:
+            print("Skipping database initialization - waiting for external database setup")
     except Exception as e:
         print(f"Database initialization error: {e}")
+        # Don't crash the app if database is not available yet
 
 # Include API routers
 app.include_router(api_router, prefix="/api/v1")
@@ -50,12 +55,17 @@ def read_root():
         "docs": "/docs",
         "frontend": "/static/index.html" if os.path.exists("src/static/index.html") else None,
         "version": "1.0.0",
-        "status": "running"
+        "status": "running",
+        "database_configured": "db:" not in settings.DATABASE_URL
     }
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "service": "Smart Event Planner API"}
+    return {
+        "status": "healthy", 
+        "service": "Smart Event Planner API",
+        "database_ready": "db:" not in settings.DATABASE_URL
+    }
 
 @app.exception_handler(500)
 async def internal_server_error_handler(request, exc):
