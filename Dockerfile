@@ -16,12 +16,12 @@ COPY ./tests ./tests
 # Copy the Alembic configuration
 COPY alembic.ini .
 
-# Use a startup script to handle PORT variable properly
+# Copy startup script and make it executable
 COPY start.sh .
 RUN chmod +x start.sh
 
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Command to run the application
+# Use startup script to handle PORT variable properly
 CMD ["./start.sh"]

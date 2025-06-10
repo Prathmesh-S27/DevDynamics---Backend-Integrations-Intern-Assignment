@@ -59,5 +59,11 @@ def health_check():
 # For local development and deployment
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 8000))
+    try:
+        port = int(os.getenv("PORT", 8000))
+        if port < 1 or port > 65535:
+            port = 8000
+    except (ValueError, TypeError):
+        port = 8000
+    
     uvicorn.run("src.main:app", host="0.0.0.0", port=port, reload=settings.DEBUG)
