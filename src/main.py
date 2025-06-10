@@ -33,17 +33,13 @@ except RuntimeError:
 
 @app.on_event("startup")
 async def startup_event():
-    """Create database tables on startup."""
+    """Create PostgreSQL database tables on startup."""
     try:
-        # Only create tables if DATABASE_URL is properly configured
-        if "db:" not in settings.DATABASE_URL:  # Skip if using docker 'db' host
-            create_tables()
-            print("Database tables created successfully")
-        else:
-            print("Skipping database initialization - waiting for external database setup")
+        create_tables()
+        print("PostgreSQL database initialized successfully")
     except Exception as e:
-        print(f"Database initialization error: {e}")
-        # Don't crash the app if database is not available yet
+        print(f"PostgreSQL connection failed: {e}")
+        raise  # App won't start without PostgreSQL
 
 # Include API routers
 app.include_router(api_router, prefix="/api/v1")
@@ -53,19 +49,45 @@ def read_root():
     return {
         "message": "Welcome to the Smart Event Planner API",
         "docs": "/docs",
-        "frontend": "/static/index.html" if os.path.exists("src/static/index.html") else None,
+        "frontend": "/static/index.html",
         "version": "1.0.0",
         "status": "running",
-        "database_configured": "db:" not in settings.DATABASE_URL
+        "features": [
+            "Event Management",
+            "Weather Integration", 
+            "Smart Recommendations",
+            "Interactive Frontend"
+        ]
     }
 
 @app.get("/health")
 def health_check():
-    return {
-        "status": "healthy", 
-        "service": "Smart Event Planner API",
-        "database_ready": "db:" not in settings.DATABASE_URL
-    }
+    try:
+        from src.core.database import engine
+        with engine.connect() as conn:
+            result = conn.execute("SELECT version()")
+            pg_version = result.fetchone()[0]
+        return {
+            "status": "healthy",
+            "service": "Smart Event Planner API",
+            "database": {
+                "type": "PostgreSQL",
+                "status": "connected",
+                "version": pg_version
+            },
+            "version": "1.0.0"
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "service": "Smart Event Planner API", 
+            "database": {
+                "type": "PostgreSQL",
+                "status": "disconnected",
+                "error": str(e)
+            },
+            "version": "1.0.0"
+        }
 
 @app.exception_handler(500)
 async def internal_server_error_handler(request, exc):

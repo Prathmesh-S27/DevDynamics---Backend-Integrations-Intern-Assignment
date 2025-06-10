@@ -2,8 +2,8 @@ from pydantic_settings import BaseSettings
 import os
 
 class Settings(BaseSettings):
-    # Database - Use production DATABASE_URL if available
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/event_planner")
+    # PostgreSQL Database URL - required
+    DATABASE_URL: str = ""
     
     # Security
     SECRET_KEY: str = "fallback-secret-key-change-in-production"
@@ -31,6 +31,11 @@ class Settings(BaseSettings):
         
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        
+        # Ensure PostgreSQL DATABASE_URL is provided
+        if not self.DATABASE_URL or "postgresql" not in self.DATABASE_URL:
+            raise ValueError("PostgreSQL DATABASE_URL environment variable is required")
+        
         # Handle production PORT environment variable
         if os.getenv("PORT"):
             try:

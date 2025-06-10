@@ -8,15 +8,13 @@ elif ! [[ "$PORT" =~ ^[0-9]+$ ]] || [ "$PORT" -lt 1 ] || [ "$PORT" -gt 65535 ]; 
     PORT=8000
 fi
 
-echo "Starting uvicorn on port $PORT"
+echo "🚀 Starting Smart Event Planner API"
+echo "Port: $PORT"
 echo "Environment: ${NODE_ENV:-production}"
 echo "Database URL configured: ${DATABASE_URL:+yes}"
 
-# Wait a moment for database to be ready if in production
-if [[ "${DATABASE_URL}" == *"postgresql"* ]]; then
-    echo "Waiting for database to be ready..."
-    sleep 5
-fi
+# Create SQLite database directory if needed
+mkdir -p /app/data
 
-# Start the application
-exec uvicorn src.main:app --host 0.0.0.0 --port "$PORT" --workers 1
+# Start the application with better error handling
+exec uvicorn src.main:app --host 0.0.0.0 --port "$PORT" --workers 1 --access-log
