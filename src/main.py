@@ -5,6 +5,7 @@ from src.api.v1.api import api_router
 from src.core.config import settings
 from src.core.database import create_tables
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError
 import os
 
 app = FastAPI(
@@ -37,27 +38,32 @@ async def startup_event():
     try:
         create_tables()
         print("PostgreSQL database initialized successfully")
+    except OperationalError as e:
+        print(f"PostgreSQL not available: {e}")
+        print("⚠️  Please add PostgreSQL database to your deployment")
     except Exception as e:
-        print(f"PostgreSQL connection failed: {e}")
-        raise  # App won't start without PostgreSQL
+        print(f"Database error: {e}")
 
 # Include API routers
 app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():
+    try:
+        from src.core.database import engine
+        with engine.connect():
+            db_status = "✅ Connected"
+    except:
+        db_status = "❌ Not connected - Add PostgreSQL database"
+    
     return {
         "message": "Welcome to the Smart Event Planner API",
         "docs": "/docs",
         "frontend": "/static/index.html",
         "version": "1.0.0",
         "status": "running",
-        "features": [
-            "Event Management",
-            "Weather Integration", 
-            "Smart Recommendations",
-            "Interactive Frontend"
-        ]
+        "database": db_status,
+        "setup_required": "Add PostgreSQL database to your deployment platform"
     }
 
 @app.get("/health")

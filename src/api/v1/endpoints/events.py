@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 from src.schemas.event import EventCreate, EventUpdate, Event
 from src.services.event_service import EventService
 from src.services.weather_service import WeatherService
@@ -8,20 +9,32 @@ from src.core.database import get_db
 
 router = APIRouter()
 
-@router.post("/", response_model=Event, status_code=201)
-async def create_event(event: EventCreate, db: Session = Depends(get_db)):
-    event_service = EventService(db)
-    return event_service.create_event(event)
-
 @router.get("/", response_model=List[Event])
 async def get_events(db: Session = Depends(get_db)):
     try:
         event_service = EventService(db)
         events = event_service.get_all_events()
         return events
+    except OperationalError:
+        raise HTTPException(
+            status_code=503,
+            detail="Database unavailable. Please add PostgreSQL database to your deployment."
+        )
     except Exception as e:
-        print(f"Error in get_events: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
+
+@router.post("/", response_model=Event, status_code=201)
+async def create_event(event: EventCreate, db: Session = Depends(get_db)):
+    try:
+        event_service = EventService(db)
+        return event_service.create_event(event)
+    except OperationalError:
+        raise HTTPException(
+            status_code=503,
+            detail="Database unavailable. Please add PostgreSQL database to your deployment."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating event: {str(e)}")
 
 @router.get("/{event_id}", response_model=Event)
 async def get_event(event_id: int, db: Session = Depends(get_db)):
