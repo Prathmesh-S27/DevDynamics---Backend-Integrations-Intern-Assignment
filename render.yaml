@@ -3,7 +3,7 @@ services:
     name: smart-event-planner-api
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    startCommand: ./start.sh
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -16,7 +16,7 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: 30
       - key: OPENWEATHER_API_KEY
-        sync: false  # You'll need to set this manually in Render dashboard
+        sync: false
       - key: DEBUG
         value: false
       - key: ALLOW_ORIGINS

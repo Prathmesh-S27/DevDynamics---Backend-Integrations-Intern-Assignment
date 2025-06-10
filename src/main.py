@@ -56,7 +56,8 @@ def read_root():
 def health_check():
     return {"status": "healthy", "service": "Smart Event Planner API"}
 
-# For local development
+# For local development and deployment
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("src.main:app", host="0.0.0.0", port=settings.PORT, reload=settings.DEBUG)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("src.main:app", host="0.0.0.0", port=port, reload=settings.DEBUG)
